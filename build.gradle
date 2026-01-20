@@ -68,10 +68,25 @@ jacoco {
 
 jacocoTestReport {
     dependsOn test
+
     reports {
         html.required = true
         xml.required = true
-        csv.required = false
+    }
+
+    // 🔑 THIS IS THE IMPORTANT PART
+    afterEvaluate {
+        classDirectories.setFrom(
+                files(classDirectories.files.collect {
+                    fileTree(dir: it, exclude: [
+                            '**/*Application.class',
+                            '**/config/**',
+                            '**/entity/**',
+                            '**/dto/**',
+                            '**/*MapperImpl.class'
+                    ])
+                })
+        )
     }
 }
 
@@ -79,14 +94,18 @@ jacocoTestCoverageVerification {
     violationRules {
         rule {
             element = 'CLASS'
+
             excludes = [
                     'dev.bored.profile.ProfileServiceApplication',
-                    '**/config/**',
-                    '**/entity/**',
-                    '**/dto/**',
-                    '**/mapper/**'
+                    'dev.bored.profile.entity.*',
+                    'dev.bored.profile.dto.*',
+                    'dev.bored.profile.mapper.*',
+                    'dev.bored.profile.config.*'
             ]
+
             limit {
+                counter = 'INSTRUCTION'
+                value = 'COVEREDRATIO'
                 minimum = 0.70
             }
         }
