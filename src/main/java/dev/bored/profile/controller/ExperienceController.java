@@ -3,6 +3,7 @@ package dev.bored.profile.controller;
 import dev.bored.profile.dto.ExperienceDTO;
 import dev.bored.profile.service.ExperienceService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -54,6 +55,7 @@ public class ExperienceController {
      * @param dto the {@link ExperienceDTO} containing the experience data to save
      * @return the saved {@link ExperienceDTO}
      */
+    @PreAuthorize("isAuthenticated()")
     @PostMapping
     public ExperienceDTO addExperience(@RequestBody ExperienceDTO dto) {
         return experienceService.addExperience(dto);
@@ -66,6 +68,7 @@ public class ExperienceController {
      * @param dto          the {@link ExperienceDTO} with updated data
      * @return the updated {@link ExperienceDTO}
      */
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/{experienceId}")
     public ExperienceDTO updateExperience(@PathVariable Long experienceId, @RequestBody ExperienceDTO dto) {
         return experienceService.updateExperience(experienceId, dto);
@@ -77,6 +80,7 @@ public class ExperienceController {
      * @param experienceId the ID of the experience to delete
      * @return {@code true} if the experience was deleted, {@code false} otherwise
      */
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{experienceId}")
     public boolean deleteExperience(@PathVariable Long experienceId) {
         return experienceService.deleteExperience(experienceId);

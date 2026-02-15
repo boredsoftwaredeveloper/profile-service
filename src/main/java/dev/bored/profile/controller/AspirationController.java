@@ -3,6 +3,7 @@ package dev.bored.profile.controller;
 import dev.bored.profile.dto.AspirationDTO;
 import dev.bored.profile.service.AspirationService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -54,6 +55,7 @@ public class AspirationController {
      * @param dto the {@link AspirationDTO} containing the aspiration data to save
      * @return the saved {@link AspirationDTO}
      */
+    @PreAuthorize("isAuthenticated()")
     @PostMapping
     public AspirationDTO addAspiration(@RequestBody AspirationDTO dto) {
         return aspirationService.addAspiration(dto);
@@ -66,6 +68,7 @@ public class AspirationController {
      * @param dto          the {@link AspirationDTO} with updated data
      * @return the updated {@link AspirationDTO}
      */
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/{aspirationId}")
     public AspirationDTO updateAspiration(@PathVariable Long aspirationId, @RequestBody AspirationDTO dto) {
         return aspirationService.updateAspiration(aspirationId, dto);
@@ -77,6 +80,7 @@ public class AspirationController {
      * @param aspirationId the ID of the aspiration to delete
      * @return {@code true} if the aspiration was deleted, {@code false} otherwise
      */
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{aspirationId}")
     public boolean deleteAspiration(@PathVariable Long aspirationId) {
         return aspirationService.deleteAspiration(aspirationId);

@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -117,5 +118,47 @@ class AspirationControllerTest {
 
         mockMvc.perform(delete("/api/v1/aspirations/999"))
                 .andExpect(status().isNotFound());
+    }
+
+    // ── Security: unauthenticated access tests ──────────────────────────
+
+    @Test
+    @WithAnonymousUser
+    void getAspirations_ShouldBeAccessible_WhenUnauthenticated() throws Exception {
+        when(aspirationService.getAspirationsByProfileId(1L)).thenReturn(List.of(testDTO));
+
+        mockMvc.perform(get("/api/v1/aspirations").param("profileId", "1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void addAspiration_ShouldReturn401_WhenUnauthenticated() throws Exception {
+        mockMvc.perform(post("/api/v1/aspirations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testDTO)))
+                .andExpect(status().isUnauthorized());
+
+        verify(aspirationService, never()).addAspiration(any(AspirationDTO.class));
+    }
+
+    @Test
+    @WithAnonymousUser
+    void updateAspiration_ShouldReturn401_WhenUnauthenticated() throws Exception {
+        mockMvc.perform(put("/api/v1/aspirations/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testDTO)))
+                .andExpect(status().isUnauthorized());
+
+        verify(aspirationService, never()).updateAspiration(anyLong(), any(AspirationDTO.class));
+    }
+
+    @Test
+    @WithAnonymousUser
+    void deleteAspiration_ShouldReturn401_WhenUnauthenticated() throws Exception {
+        mockMvc.perform(delete("/api/v1/aspirations/1"))
+                .andExpect(status().isUnauthorized());
+
+        verify(aspirationService, never()).deleteAspiration(anyLong());
     }
 }

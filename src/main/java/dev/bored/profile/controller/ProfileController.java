@@ -3,6 +3,7 @@ package dev.bored.profile.controller;
 import dev.bored.profile.dto.ProfileDTO;
 import dev.bored.profile.service.ProfileService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -39,6 +40,7 @@ public class ProfileController {
      * @param profileDTO the ProfileDTO to save
      * @return the saved ProfileDTO
      */
+    @PreAuthorize("isAuthenticated()")
     @PostMapping
     public ProfileDTO addProfile(@RequestBody ProfileDTO profileDTO) {
         return profileService.addProfile(profileDTO);
@@ -51,6 +53,7 @@ public class ProfileController {
      * @param profileDTO the ProfileDTO with updated data
      * @return the updated ProfileDTO
      */
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/{profileId}")
     public ProfileDTO updateProfile(@PathVariable Long profileId, @RequestBody ProfileDTO profileDTO) {
         return profileService.updateProfile(profileId, profileDTO);
@@ -62,6 +65,7 @@ public class ProfileController {
      * @param profileId the ID of the profile to delete
      * @return true if the profile was deleted, false otherwise
      */
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping
     public boolean deleteProfile(Long profileId) {
         return profileService.deleteProfile(profileId);

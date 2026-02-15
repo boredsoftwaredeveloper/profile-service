@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -270,5 +271,65 @@ class ProfileControllerTest {
                 .andExpect(status().isNotFound());
 
         verify(profileService, times(1)).deleteProfile(profileId);
+    }
+
+    // ── Security: unauthenticated access tests ──────────────────────────
+
+    /**
+     * Verifies that GET /api/v1/profiles/{id} is publicly accessible
+     * without authentication.
+     */
+    @Test
+    @WithAnonymousUser
+    void getProfileById_ShouldBeAccessible_WhenUnauthenticated() throws Exception {
+        Long profileId = 1L;
+        when(profileService.getProfileById(profileId)).thenReturn(testProfileDTO);
+
+        mockMvc.perform(get("/api/v1/profiles/{profileId}", profileId))
+                .andExpect(status().isOk());
+    }
+
+    /**
+     * Verifies that POST /api/v1/profiles returns 401 when no authentication
+     * is provided, enforced by {@code @PreAuthorize("isAuthenticated()")}.
+     */
+    @Test
+    @WithAnonymousUser
+    void addProfile_ShouldReturn401_WhenUnauthenticated() throws Exception {
+        mockMvc.perform(post("/api/v1/profiles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testProfileDTO)))
+                .andExpect(status().isUnauthorized());
+
+        verify(profileService, never()).addProfile(any(ProfileDTO.class));
+    }
+
+    /**
+     * Verifies that PUT /api/v1/profiles/{id} returns 401 when no authentication
+     * is provided, enforced by {@code @PreAuthorize("isAuthenticated()")}.
+     */
+    @Test
+    @WithAnonymousUser
+    void updateProfile_ShouldReturn401_WhenUnauthenticated() throws Exception {
+        mockMvc.perform(put("/api/v1/profiles/{profileId}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testProfileDTO)))
+                .andExpect(status().isUnauthorized());
+
+        verify(profileService, never()).updateProfile(anyLong(), any(ProfileDTO.class));
+    }
+
+    /**
+     * Verifies that DELETE /api/v1/profiles returns 401 when no authentication
+     * is provided, enforced by {@code @PreAuthorize("isAuthenticated()")}.
+     */
+    @Test
+    @WithAnonymousUser
+    void deleteProfile_ShouldReturn401_WhenUnauthenticated() throws Exception {
+        mockMvc.perform(delete("/api/v1/profiles")
+                        .param("profileId", "1"))
+                .andExpect(status().isUnauthorized());
+
+        verify(profileService, never()).deleteProfile(anyLong());
     }
 }

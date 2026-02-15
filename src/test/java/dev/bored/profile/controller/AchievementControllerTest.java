@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -117,5 +118,47 @@ class AchievementControllerTest {
 
         mockMvc.perform(delete("/api/v1/achievements/999"))
                 .andExpect(status().isNotFound());
+    }
+
+    // ── Security: unauthenticated access tests ──────────────────────────
+
+    @Test
+    @WithAnonymousUser
+    void getAchievements_ShouldBeAccessible_WhenUnauthenticated() throws Exception {
+        when(achievementService.getAchievementsByProfileId(1L)).thenReturn(List.of(testDTO));
+
+        mockMvc.perform(get("/api/v1/achievements").param("profileId", "1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void addAchievement_ShouldReturn401_WhenUnauthenticated() throws Exception {
+        mockMvc.perform(post("/api/v1/achievements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testDTO)))
+                .andExpect(status().isUnauthorized());
+
+        verify(achievementService, never()).addAchievement(any(AchievementDTO.class));
+    }
+
+    @Test
+    @WithAnonymousUser
+    void updateAchievement_ShouldReturn401_WhenUnauthenticated() throws Exception {
+        mockMvc.perform(put("/api/v1/achievements/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testDTO)))
+                .andExpect(status().isUnauthorized());
+
+        verify(achievementService, never()).updateAchievement(anyLong(), any(AchievementDTO.class));
+    }
+
+    @Test
+    @WithAnonymousUser
+    void deleteAchievement_ShouldReturn401_WhenUnauthenticated() throws Exception {
+        mockMvc.perform(delete("/api/v1/achievements/1"))
+                .andExpect(status().isUnauthorized());
+
+        verify(achievementService, never()).deleteAchievement(anyLong());
     }
 }

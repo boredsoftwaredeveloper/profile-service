@@ -3,6 +3,7 @@ package dev.bored.profile.controller;
 import dev.bored.profile.dto.AchievementDTO;
 import dev.bored.profile.service.AchievementService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -54,6 +55,7 @@ public class AchievementController {
      * @param dto the {@link AchievementDTO} containing the achievement data to save
      * @return the saved {@link AchievementDTO}
      */
+    @PreAuthorize("isAuthenticated()")
     @PostMapping
     public AchievementDTO addAchievement(@RequestBody AchievementDTO dto) {
         return achievementService.addAchievement(dto);
@@ -66,6 +68,7 @@ public class AchievementController {
      * @param dto           the {@link AchievementDTO} with updated data
      * @return the updated {@link AchievementDTO}
      */
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/{achievementId}")
     public AchievementDTO updateAchievement(@PathVariable Long achievementId, @RequestBody AchievementDTO dto) {
         return achievementService.updateAchievement(achievementId, dto);
@@ -77,6 +80,7 @@ public class AchievementController {
      * @param achievementId the ID of the achievement to delete
      * @return {@code true} if the achievement was deleted, {@code false} otherwise
      */
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{achievementId}")
     public boolean deleteAchievement(@PathVariable Long achievementId) {
         return achievementService.deleteAchievement(achievementId);
