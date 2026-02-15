@@ -1,3 +1,1 @@
 rootProject.name = 'profile-service'
-
-includeBuild('../common-lib')
