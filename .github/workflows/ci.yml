@@ -6,9 +6,17 @@ on:
   pull_request:
     branches: [ "master" ]
 
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
 
     steps:
       - name: Checkout code
@@ -23,5 +31,23 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Build & test
+      - name: Build & test with coverage
         run: ./gradlew clean check
+
+      - name: Upload JaCoCo report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: build/reports/jacoco/test/html/
+
+      - name: Add coverage to PR
+        if: github.event_name == 'pull_request'
+        uses: madrapps/jacoco-report@v1.7.1
+        with:
+          paths: build/reports/jacoco/test/jacocoTestReport.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 90
+          min-coverage-changed-files: 90
+          title: "## 📊 Coverage Report"
+          update-comment: true
