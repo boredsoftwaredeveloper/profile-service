@@ -2,7 +2,7 @@ package dev.bored.profile.service;
 
 import dev.bored.profile.dto.ExperienceDTO;
 import dev.bored.profile.entity.Experience;
-import dev.bored.profile.exception.GenericException;
+import dev.bored.common.exception.GenericException;
 import dev.bored.profile.mapper.ExperienceMapper;
 import dev.bored.profile.repository.ExperienceRepository;
 import lombok.AllArgsConstructor;

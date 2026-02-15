@@ -1,5 +1,6 @@
 package dev.bored.profile.config;
 
+import dev.bored.common.constant.AppConstants;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -30,13 +31,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins(
-                        "http://localhost:4200",
-                        "https://boredsoftwaredeveloper.xyz",
-                        "https://www.boredsoftwaredeveloper.xyz"
-                )
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedOrigins(AppConstants.ALLOWED_ORIGINS)
+                .allowedMethods(AppConstants.ALLOWED_METHODS)
                 .allowedHeaders("*")
-                .maxAge(3600);
+                .maxAge(AppConstants.CORS_MAX_AGE);
     }
 }

@@ -1,5 +1,7 @@
 package dev.bored.profile.exception;
 
+import dev.bored.common.exception.ErrorResponse;
+import dev.bored.common.exception.GenericException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -36,11 +38,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleGeneric(GenericException ex) {
         log.warn("Error [{}]: {}", ex.getStatus().value(), ex.getMessage());
         return ResponseEntity.status(ex.getStatus())
-                .body(Map.of(
-                        "status", ex.getStatus().value(),
-                        "error", ex.getStatus().getReasonPhrase(),
-                        "message", ex.getMessage()
-                ));
+                .body(ErrorResponse.of(ex, null));
     }
 
     /**
@@ -57,10 +55,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleRuntime(RuntimeException ex) {
         log.error("Unexpected error: {}", ex.getMessage(), ex);
         return ResponseEntity.internalServerError()
-                .body(Map.of(
-                        "status", 500,
-                        "error", "Internal Server Error",
-                        "message", "An unexpected error occurred"
-                ));
+                .body(ErrorResponse.of(500, "Internal Server Error", "An unexpected error occurred", null));
     }
 }

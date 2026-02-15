@@ -20,6 +20,11 @@ spring:
   flyway:
     enabled: false
 
+# Test JWT secret (HS256 — minimum 32 bytes)
+supabase:
+  jwt:
+    secret: test-secret-that-is-at-least-32-bytes-long
+
   h2:
     console:
       enabled: true

@@ -2,7 +2,7 @@ package dev.bored.profile.service;
 
 import dev.bored.profile.dto.AchievementDTO;
 import dev.bored.profile.entity.Achievement;
-import dev.bored.profile.exception.GenericException;
+import dev.bored.common.exception.GenericException;
 import dev.bored.profile.mapper.AchievementMapper;
 import dev.bored.profile.repository.AchievementRepository;
 import lombok.AllArgsConstructor;

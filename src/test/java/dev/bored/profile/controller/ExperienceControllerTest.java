@@ -2,13 +2,16 @@ package dev.bored.profile.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.bored.profile.dto.ExperienceDTO;
-import dev.bored.profile.exception.GenericException;
+import dev.bored.common.exception.GenericException;
+import dev.bored.profile.config.SecurityConfig;
 import dev.bored.profile.service.ExperienceService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,6 +26,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ExperienceController.class)
+@Import(SecurityConfig.class)
+@WithMockUser
 class ExperienceControllerTest {
 
     @Autowired

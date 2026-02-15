@@ -24,6 +24,11 @@ spring:
   jackson:
     default-property-inclusion: non_null
 
+# ── Supabase Auth ──────────────────────────────────────────────────
+supabase:
+  jwt:
+    secret: ${SUPABASE_JWT_SECRET}
+
 management:
   endpoints:
     web:

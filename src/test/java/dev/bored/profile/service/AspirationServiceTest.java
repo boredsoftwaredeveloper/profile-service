@@ -3,7 +3,7 @@ package dev.bored.profile.service;
 import dev.bored.profile.dto.AspirationDTO;
 import dev.bored.profile.entity.Aspiration;
 import dev.bored.profile.entity.Profile;
-import dev.bored.profile.exception.GenericException;
+import dev.bored.common.exception.GenericException;
 import dev.bored.profile.mapper.AspirationMapper;
 import dev.bored.profile.repository.AspirationRepository;
 import org.junit.jupiter.api.BeforeEach;

@@ -2,7 +2,7 @@ package dev.bored.profile.service;
 
 import dev.bored.profile.dto.ProfileDTO;
 import dev.bored.profile.entity.Profile;
-import dev.bored.profile.exception.GenericException;
+import dev.bored.common.exception.GenericException;
 import dev.bored.profile.mapper.ProfileMapper;
 import dev.bored.profile.repository.ProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
