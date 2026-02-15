@@ -2,6 +2,7 @@ package dev.bored.profile.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.bored.profile.dto.ProfileDTO;
+import dev.bored.profile.exception.GenericException;
 import dev.bored.profile.service.ProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,8 @@ class ProfileControllerTest {
         testProfileDTO = ProfileDTO.builder()
                 .firstName("John")
                 .lastName("Doe")
+                .photoUrl("https://example.com/photo.jpg")
+                .status("Bored but coding")
                 .build();
     }
 
@@ -77,7 +80,9 @@ class ProfileControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.firstName").value("John"))
-                .andExpect(jsonPath("$.lastName").value("Doe"));
+                .andExpect(jsonPath("$.lastName").value("Doe"))
+                .andExpect(jsonPath("$.photoUrl").value("https://example.com/photo.jpg"))
+                .andExpect(jsonPath("$.status").value("Bored but coding"));
 
         verify(profileService, times(1)).getProfileById(profileId);
     }
@@ -86,7 +91,7 @@ class ProfileControllerTest {
      * Tests the error handling when retrieving a non-existent profile.
      * <p>
      * Verifies that when a profile ID does not exist, the controller
-     * returns HTTP 500 Internal Server Error status.
+     * returns HTTP 404 Not Found status.
      * </p>
      *
      * @throws Exception if the mock MVC request fails
@@ -96,11 +101,11 @@ class ProfileControllerTest {
         // Arrange
         Long profileId = 999L;
         when(profileService.getProfileById(profileId))
-                .thenThrow(new RuntimeException("Profile not found"));
+                .thenThrow(new GenericException("Profile not found with id: " + profileId, org.springframework.http.HttpStatus.NOT_FOUND));
 
         // Act & Assert
         mockMvc.perform(get("/api/v1/profiles/{profileId}", profileId))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotFound());
 
         verify(profileService, times(1)).getProfileById(profileId);
     }
@@ -120,11 +125,15 @@ class ProfileControllerTest {
         ProfileDTO inputDTO = ProfileDTO.builder()
                 .firstName("Jane")
                 .lastName("Smith")
+                .photoUrl("https://example.com/jane.jpg")
+                .status("Active")
                 .build();
 
         ProfileDTO savedDTO = ProfileDTO.builder()
                 .firstName("Jane")
                 .lastName("Smith")
+                .photoUrl("https://example.com/jane.jpg")
+                .status("Active")
                 .build();
 
         when(profileService.addProfile(any(ProfileDTO.class))).thenReturn(savedDTO);
@@ -136,7 +145,9 @@ class ProfileControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.firstName").value("Jane"))
-                .andExpect(jsonPath("$.lastName").value("Smith"));
+                .andExpect(jsonPath("$.lastName").value("Smith"))
+                .andExpect(jsonPath("$.photoUrl").value("https://example.com/jane.jpg"))
+                .andExpect(jsonPath("$.status").value("Active"));
 
         verify(profileService, times(1)).addProfile(any(ProfileDTO.class));
     }
@@ -157,6 +168,8 @@ class ProfileControllerTest {
         ProfileDTO updatedDTO = ProfileDTO.builder()
                 .firstName("John Updated")
                 .lastName("Doe Updated")
+                .photoUrl("https://example.com/updated.jpg")
+                .status("Updated")
                 .build();
 
         when(profileService.updateProfile(eq(profileId), any(ProfileDTO.class)))
@@ -169,7 +182,9 @@ class ProfileControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.firstName").value("John Updated"))
-                .andExpect(jsonPath("$.lastName").value("Doe Updated"));
+                .andExpect(jsonPath("$.lastName").value("Doe Updated"))
+                .andExpect(jsonPath("$.photoUrl").value("https://example.com/updated.jpg"))
+                .andExpect(jsonPath("$.status").value("Updated"));
 
         verify(profileService, times(1)).updateProfile(eq(profileId), any(ProfileDTO.class));
     }
@@ -193,13 +208,13 @@ class ProfileControllerTest {
                 .build();
 
         when(profileService.updateProfile(eq(profileId), any(ProfileDTO.class)))
-                .thenThrow(new RuntimeException("Profile not found"));
+                .thenThrow(new GenericException("Profile not found with id: " + profileId, org.springframework.http.HttpStatus.NOT_FOUND));
 
         // Act & Assert
         mockMvc.perform(put("/api/v1/profiles/{profileId}", profileId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedDTO)))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotFound());
 
         verify(profileService, times(1)).updateProfile(eq(profileId), any(ProfileDTO.class));
     }
@@ -232,23 +247,22 @@ class ProfileControllerTest {
      * Tests the deletion attempt of a non-existent profile.
      * <p>
      * Verifies that when a profile ID does not exist during a delete operation,
-     * the controller returns HTTP 200 OK status with a boolean value of false,
-     * indicating the profile was not found and therefore not deleted.
+     * the controller returns HTTP 404 Not Found status.
      * </p>
      *
      * @throws Exception if the mock MVC request fails
      */
     @Test
-    void deleteProfile_ShouldReturnFalse_WhenProfileNotFound() throws Exception {
+    void deleteProfile_ShouldReturn404_WhenProfileNotFound() throws Exception {
         // Arrange
         Long profileId = 999L;
-        when(profileService.deleteProfile(profileId)).thenReturn(false);
+        when(profileService.deleteProfile(profileId))
+                .thenThrow(new GenericException("Profile not found with id: " + profileId, org.springframework.http.HttpStatus.NOT_FOUND));
 
         // Act & Assert
         mockMvc.perform(delete("/api/v1/profiles")
                         .param("profileId", profileId.toString()))
-                .andExpect(status().isOk())
-                .andExpect(content().string("false"));
+                .andExpect(status().isNotFound());
 
         verify(profileService, times(1)).deleteProfile(profileId);
     }

@@ -83,6 +83,7 @@ jacocoTestReport {
                             '**/config/**',
                             '**/entity/**',
                             '**/dto/**',
+                            '**/exception/**',
                             '**/*MapperImpl.class'
                     ])
                 })
@@ -100,7 +101,8 @@ jacocoTestCoverageVerification {
                     'dev.bored.profile.entity.*',
                     'dev.bored.profile.dto.*',
                     'dev.bored.profile.mapper.*',
-                    'dev.bored.profile.config.*'
+                    'dev.bored.profile.config.*',
+                    'dev.bored.profile.exception.*'
             ]
 
             limit {

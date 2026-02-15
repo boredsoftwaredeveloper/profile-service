@@ -5,6 +5,16 @@ import dev.bored.profile.service.ProfileService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST controller for managing profile data via CRUD operations.
+ * <p>
+ * Exposes endpoints under {@code /api/v1/profiles} to create, read,
+ * update, and delete user profiles.
+ * </p>
+ *
+ * @author Bored Software Developer
+ * @since 2026-02-15
+ */
 @RestController
 @AllArgsConstructor
 @RequestMapping("api/v1/profiles")
