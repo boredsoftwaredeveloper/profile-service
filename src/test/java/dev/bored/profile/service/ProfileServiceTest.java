@@ -2,6 +2,7 @@ package dev.bored.profile.service;
 
 import dev.bored.profile.dto.ProfileDTO;
 import dev.bored.profile.entity.Profile;
+import dev.bored.profile.exception.GenericException;
 import dev.bored.profile.mapper.ProfileMapper;
 import dev.bored.profile.repository.ProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,10 +57,14 @@ class ProfileServiceTest {
         testProfile.setProfileId(1L);
         testProfile.setFirstName("John");
         testProfile.setLastName("Doe");
+        testProfile.setPhotoUrl("https://example.com/photo.jpg");
+        testProfile.setStatus("Bored but coding");
 
         testProfileDTO = ProfileDTO.builder()
                 .firstName("John")
                 .lastName("Doe")
+                .photoUrl("https://example.com/photo.jpg")
+                .status("Bored but coding")
                 .build();
     }
 
@@ -85,6 +90,8 @@ class ProfileServiceTest {
         assertNotNull(result);
         assertEquals("John", result.getFirstName());
         assertEquals("Doe", result.getLastName());
+        assertEquals("https://example.com/photo.jpg", result.getPhotoUrl());
+        assertEquals("Bored but coding", result.getStatus());
         verify(profileRepository, times(1)).findById(profileId);
         verify(profileMapper, times(1)).toDTO(testProfile);
     }
@@ -93,7 +100,7 @@ class ProfileServiceTest {
      * Tests retrieval of a non-existent profile by ID.
      * <p>
      * Verifies that when a profile ID does not exist in the repository,
-     * the service throws a {@link RuntimeException} with the appropriate error message.
+     * the service throws a {@link GenericException} with the appropriate error message.
      * </p>
      */
     @Test
@@ -103,9 +110,9 @@ class ProfileServiceTest {
         when(profileRepository.findById(profileId)).thenReturn(Optional.empty());
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> profileService.getProfileById(profileId));
+        GenericException exception = assertThrows(GenericException.class, () -> profileService.getProfileById(profileId));
 
-        assertEquals("Profile not found", exception.getMessage());
+        assertEquals("Profile not found with id: 999", exception.getMessage());
         verify(profileRepository, times(1)).findById(profileId);
         verify(profileMapper, never()).toDTO(any());
     }
@@ -124,20 +131,28 @@ class ProfileServiceTest {
         ProfileDTO inputDTO = ProfileDTO.builder()
                 .firstName("Jane")
                 .lastName("Smith")
+                .photoUrl("https://example.com/jane.jpg")
+                .status("Active")
                 .build();
 
         Profile profileToSave = new Profile();
         profileToSave.setFirstName("Jane");
         profileToSave.setLastName("Smith");
+        profileToSave.setPhotoUrl("https://example.com/jane.jpg");
+        profileToSave.setStatus("Active");
 
         Profile savedProfile = new Profile();
         savedProfile.setProfileId(2L);
         savedProfile.setFirstName("Jane");
         savedProfile.setLastName("Smith");
+        savedProfile.setPhotoUrl("https://example.com/jane.jpg");
+        savedProfile.setStatus("Active");
 
         ProfileDTO savedProfileDTO = ProfileDTO.builder()
                 .firstName("Jane")
                 .lastName("Smith")
+                .photoUrl("https://example.com/jane.jpg")
+                .status("Active")
                 .build();
 
         when(profileMapper.toEntity(inputDTO)).thenReturn(profileToSave);
@@ -151,6 +166,8 @@ class ProfileServiceTest {
         assertNotNull(result);
         assertEquals("Jane", result.getFirstName());
         assertEquals("Smith", result.getLastName());
+        assertEquals("https://example.com/jane.jpg", result.getPhotoUrl());
+        assertEquals("Active", result.getStatus());
         verify(profileMapper, times(1)).toEntity(inputDTO);
         verify(profileRepository, times(1)).save(profileToSave);
         verify(profileMapper, times(1)).toDTO(savedProfile);
@@ -171,21 +188,29 @@ class ProfileServiceTest {
         ProfileDTO updatedDTO = ProfileDTO.builder()
                 .firstName("John Updated")
                 .lastName("Doe Updated")
+                .photoUrl("https://example.com/updated.jpg")
+                .status("Updated")
                 .build();
 
         Profile existingProfile = new Profile();
         existingProfile.setProfileId(profileId);
         existingProfile.setFirstName("John");
         existingProfile.setLastName("Doe");
+        existingProfile.setPhotoUrl("https://example.com/photo.jpg");
+        existingProfile.setStatus("Bored but coding");
 
         Profile updatedProfile = new Profile();
         updatedProfile.setProfileId(profileId);
         updatedProfile.setFirstName("John Updated");
         updatedProfile.setLastName("Doe Updated");
+        updatedProfile.setPhotoUrl("https://example.com/updated.jpg");
+        updatedProfile.setStatus("Updated");
 
         ProfileDTO resultDTO = ProfileDTO.builder()
                 .firstName("John Updated")
                 .lastName("Doe Updated")
+                .photoUrl("https://example.com/updated.jpg")
+                .status("Updated")
                 .build();
 
         when(profileRepository.findById(profileId)).thenReturn(Optional.of(existingProfile));
@@ -199,6 +224,8 @@ class ProfileServiceTest {
         assertNotNull(result);
         assertEquals("John Updated", result.getFirstName());
         assertEquals("Doe Updated", result.getLastName());
+        assertEquals("https://example.com/updated.jpg", result.getPhotoUrl());
+        assertEquals("Updated", result.getStatus());
         verify(profileRepository, times(1)).findById(profileId);
         verify(profileRepository, times(1)).save(existingProfile);
         verify(profileMapper, times(1)).toDTO(updatedProfile);
@@ -208,7 +235,7 @@ class ProfileServiceTest {
      * Tests update attempt on a non-existent profile.
      * <p>
      * Verifies that when attempting to update a profile that does not exist,
-     * the service throws a {@link RuntimeException} with the appropriate error message.
+     * the service throws a {@link GenericException} with the appropriate error message.
      * </p>
      */
     @Test
@@ -223,9 +250,9 @@ class ProfileServiceTest {
         when(profileRepository.findById(profileId)).thenReturn(Optional.empty());
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> profileService.updateProfile(profileId, updatedDTO));
+        GenericException exception = assertThrows(GenericException.class, () -> profileService.updateProfile(profileId, updatedDTO));
 
-        assertEquals("Profile not found", exception.getMessage());
+        assertEquals("Profile not found with id: 999", exception.getMessage());
         verify(profileRepository, times(1)).findById(profileId);
         verify(profileRepository, never()).save(any());
         verify(profileMapper, never()).toDTO(any());
@@ -259,7 +286,7 @@ class ProfileServiceTest {
      * Tests deletion attempt on a non-existent profile.
      * <p>
      * Verifies that when attempting to delete a profile that does not exist,
-     * the service throws a {@link RuntimeException} with the appropriate error message
+     * the service throws a {@link GenericException} with the appropriate error message
      * and does not attempt to delete from the repository.
      * </p>
      */
@@ -270,9 +297,9 @@ class ProfileServiceTest {
         when(profileRepository.existsById(profileId)).thenReturn(false);
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> profileService.deleteProfile(profileId));
+        GenericException exception = assertThrows(GenericException.class, () -> profileService.deleteProfile(profileId));
 
-        assertEquals("Profile not found", exception.getMessage());
+        assertEquals("Profile not found with id: 999", exception.getMessage());
         verify(profileRepository, times(1)).existsById(profileId);
         verify(profileRepository, never()).deleteById(any());
     }
@@ -291,7 +318,7 @@ class ProfileServiceTest {
         when(profileRepository.findById(profileId)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> profileService.getProfileById(profileId));
+        assertThrows(GenericException.class, () -> profileService.getProfileById(profileId));
 
         verify(profileMapper, never()).toDTO(any());
     }
@@ -310,12 +337,16 @@ class ProfileServiceTest {
         ProfileDTO updatedDTO = ProfileDTO.builder()
                 .firstName("NewFirst")
                 .lastName("NewLast")
+                .photoUrl("https://example.com/new.jpg")
+                .status("New Status")
                 .build();
 
         Profile existingProfile = new Profile();
         existingProfile.setProfileId(profileId);
         existingProfile.setFirstName("OldFirst");
         existingProfile.setLastName("OldLast");
+        existingProfile.setPhotoUrl("https://example.com/old.jpg");
+        existingProfile.setStatus("Old Status");
 
         when(profileRepository.findById(profileId)).thenReturn(Optional.of(existingProfile));
         when(profileRepository.save(any(Profile.class))).thenReturn(existingProfile);
@@ -327,6 +358,8 @@ class ProfileServiceTest {
         // Assert
         assertEquals("NewFirst", existingProfile.getFirstName());
         assertEquals("NewLast", existingProfile.getLastName());
+        assertEquals("https://example.com/new.jpg", existingProfile.getPhotoUrl());
+        assertEquals("New Status", existingProfile.getStatus());
         verify(profileRepository, times(1)).save(existingProfile);
     }
 }
