@@ -20,7 +20,7 @@ import java.util.List;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("api/v1/aspirations")
+@RequestMapping("/api/v1/aspirations")
 public class AspirationController {
 
     private final AspirationService aspirationService;
