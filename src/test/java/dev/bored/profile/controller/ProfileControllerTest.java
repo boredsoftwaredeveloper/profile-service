@@ -2,6 +2,7 @@ package dev.bored.profile.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.bored.profile.dto.ProfileDTO;
+import dev.bored.common.exception.CommonExceptionHandler;
 import dev.bored.common.exception.GenericException;
 import dev.bored.profile.config.SecurityConfig;
 import dev.bored.profile.service.ProfileService;
@@ -34,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @since 2026-01-21
  */
 @WebMvcTest(ProfileController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, CommonExceptionHandler.class})
 @WithMockUser
 class ProfileControllerTest {
 

@@ -2,6 +2,7 @@ package dev.bored.profile.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.bored.profile.dto.ExperienceDTO;
+import dev.bored.common.exception.CommonExceptionHandler;
 import dev.bored.common.exception.GenericException;
 import dev.bored.profile.config.SecurityConfig;
 import dev.bored.profile.service.ExperienceService;
@@ -27,7 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ExperienceController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, CommonExceptionHandler.class})
 @WithMockUser
 class ExperienceControllerTest {
 

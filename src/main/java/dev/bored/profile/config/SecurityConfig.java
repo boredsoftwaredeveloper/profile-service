@@ -9,13 +9,11 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
-
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 /**
  * Spring Security configuration for the Profile REST API.
@@ -33,8 +31,8 @@ import java.nio.charset.StandardCharsets;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${supabase.jwt.secret}")
-    private String jwtSecret;
+    @Value("${supabase.jwks-uri}")
+    private String jwksUri;
 
     /**
      * Defines the HTTP security filter chain.
@@ -48,6 +46,11 @@ public class SecurityConfig {
         return http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
+                .headers(headers -> headers
+                        .frameOptions(f -> f.deny())
+                        .contentTypeOptions(Customizer.withDefaults())
+                        .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+                        .httpStrictTransportSecurity(h -> h.includeSubDomains(true).maxAgeInSeconds(31_536_000)))
                 .authorizeHttpRequests(auth -> auth
                         // Public: all GET requests (portfolio is read-only for visitors)
                         .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
@@ -65,20 +68,19 @@ public class SecurityConfig {
     }
 
     /**
-     * Creates a JWT decoder that validates Supabase tokens using HS256.
+     * Creates a JWT decoder that validates Supabase tokens using ES256.
      * <p>
-     * Supabase signs JWTs with a symmetric secret (HMAC-SHA256), not RSA.
-     * The secret is injected from the {@code SUPABASE_JWT_SECRET} env var.
+     * Supabase signs JWTs with an asymmetric ECDSA P-256 key. Public keys are
+     * fetched from the project's JWKS endpoint (cached by Nimbus) and used
+     * to verify incoming tokens.
      * </p>
      *
      * @return the configured {@link JwtDecoder}
      */
     @Bean
     public JwtDecoder jwtDecoder() {
-        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
-        SecretKeySpec key = new SecretKeySpec(keyBytes, "HmacSHA256");
-        return NimbusJwtDecoder.withSecretKey(key)
-                .macAlgorithm(MacAlgorithm.HS256)
+        return NimbusJwtDecoder.withJwkSetUri(jwksUri)
+                .jwsAlgorithm(SignatureAlgorithm.ES256)
                 .build();
     }
 }
