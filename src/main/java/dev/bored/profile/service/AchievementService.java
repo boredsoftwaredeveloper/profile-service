@@ -6,6 +6,9 @@ import dev.bored.common.exception.GenericException;
 import dev.bored.profile.mapper.AchievementMapper;
 import dev.bored.profile.repository.AchievementRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +40,7 @@ public class AchievementService {
      * @return a list of {@link AchievementDTO} instances for the specified profile
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheNames.ACHIEVEMENTS_BY_PROFILE, key = "#profileId")
     public List<AchievementDTO> getAchievementsByProfileId(Long profileId) {
         return achievementMapper.toDTOList(
                 achievementRepository.findByProfile_ProfileIdOrderBySortOrderAsc(profileId));
@@ -50,6 +54,7 @@ public class AchievementService {
      * @throws GenericException if no achievement exists with the specified id (HTTP 404)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheNames.ACHIEVEMENT_BY_ID, key = "#achievementId")
     public AchievementDTO getAchievementById(Long achievementId) {
         Achievement achievement = achievementRepository.findById(achievementId)
                 .orElseThrow(() -> new GenericException("Achievement not found with id: " + achievementId, HttpStatus.NOT_FOUND));
@@ -63,6 +68,7 @@ public class AchievementService {
      * @return the newly created {@link AchievementDTO} with its persisted state
      */
     @Transactional
+    @CacheEvict(value = CacheNames.ACHIEVEMENTS_BY_PROFILE, allEntries = true)
     public AchievementDTO addAchievement(AchievementDTO dto) {
         Achievement entity = achievementMapper.toEntity(dto);
         return achievementMapper.toDTO(achievementRepository.save(entity));
@@ -77,6 +83,10 @@ public class AchievementService {
      * @throws GenericException if no achievement exists with the specified id (HTTP 404)
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheNames.ACHIEVEMENT_BY_ID, key = "#achievementId"),
+            @CacheEvict(value = CacheNames.ACHIEVEMENTS_BY_PROFILE, allEntries = true)
+    })
     public AchievementDTO updateAchievement(Long achievementId, AchievementDTO dto) {
         Achievement existing = achievementRepository.findById(achievementId)
                 .orElseThrow(() -> new GenericException("Achievement not found with id: " + achievementId, HttpStatus.NOT_FOUND));
@@ -102,6 +112,10 @@ public class AchievementService {
      * @throws GenericException if no achievement exists with the specified id (HTTP 404)
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheNames.ACHIEVEMENT_BY_ID, key = "#achievementId"),
+            @CacheEvict(value = CacheNames.ACHIEVEMENTS_BY_PROFILE, allEntries = true)
+    })
     public boolean deleteAchievement(Long achievementId) {
         if (achievementRepository.existsById(achievementId)) {
             achievementRepository.deleteById(achievementId);

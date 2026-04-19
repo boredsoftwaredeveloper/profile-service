@@ -6,6 +6,9 @@ import dev.bored.common.exception.GenericException;
 import dev.bored.profile.mapper.ExperienceMapper;
 import dev.bored.profile.repository.ExperienceRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +40,7 @@ public class ExperienceService {
      * @return a list of {@link ExperienceDTO} instances for the specified profile
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheNames.EXPERIENCES_BY_PROFILE, key = "#profileId")
     public List<ExperienceDTO> getExperiencesByProfileId(Long profileId) {
         return experienceMapper.toDTOList(
                 experienceRepository.findByProfile_ProfileIdOrderBySortOrderAsc(profileId));
@@ -50,6 +54,7 @@ public class ExperienceService {
      * @throws GenericException if no experience exists with the specified id (HTTP 404)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheNames.EXPERIENCE_BY_ID, key = "#experienceId")
     public ExperienceDTO getExperienceById(Long experienceId) {
         Experience experience = experienceRepository.findById(experienceId)
                 .orElseThrow(() -> new GenericException("Experience not found with id: " + experienceId, HttpStatus.NOT_FOUND));
@@ -63,6 +68,7 @@ public class ExperienceService {
      * @return the newly created {@link ExperienceDTO} with its persisted state
      */
     @Transactional
+    @CacheEvict(value = CacheNames.EXPERIENCES_BY_PROFILE, allEntries = true)
     public ExperienceDTO addExperience(ExperienceDTO dto) {
         Experience entity = experienceMapper.toEntity(dto);
         return experienceMapper.toDTO(experienceRepository.save(entity));
@@ -77,6 +83,10 @@ public class ExperienceService {
      * @throws GenericException if no experience exists with the specified id (HTTP 404)
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheNames.EXPERIENCE_BY_ID, key = "#experienceId"),
+            @CacheEvict(value = CacheNames.EXPERIENCES_BY_PROFILE, allEntries = true)
+    })
     public ExperienceDTO updateExperience(Long experienceId, ExperienceDTO dto) {
         Experience existing = experienceRepository.findById(experienceId)
                 .orElseThrow(() -> new GenericException("Experience not found with id: " + experienceId, HttpStatus.NOT_FOUND));
@@ -101,6 +111,10 @@ public class ExperienceService {
      * @throws GenericException if no experience exists with the specified id (HTTP 404)
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheNames.EXPERIENCE_BY_ID, key = "#experienceId"),
+            @CacheEvict(value = CacheNames.EXPERIENCES_BY_PROFILE, allEntries = true)
+    })
     public boolean deleteExperience(Long experienceId) {
         if (experienceRepository.existsById(experienceId)) {
             experienceRepository.deleteById(experienceId);

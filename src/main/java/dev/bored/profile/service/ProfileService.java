@@ -6,6 +6,8 @@ import dev.bored.common.exception.GenericException;
 import dev.bored.profile.mapper.ProfileMapper;
 import dev.bored.profile.repository.ProfileRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +38,7 @@ public class ProfileService {
      * @throws GenericException if no profile exists with the specified id (HTTP 404)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheNames.PROFILE_BY_ID, key = "#profileId")
     public ProfileDTO getProfileById(Long profileId) {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new GenericException("Profile not found with id: " + profileId, HttpStatus.NOT_FOUND));
@@ -64,6 +67,7 @@ public class ProfileService {
      * @throws GenericException if no profile exists with the specified id (HTTP 404)
      */
     @Transactional
+    @CacheEvict(value = CacheNames.PROFILE_BY_ID, key = "#profileId")
     public ProfileDTO updateProfile(Long profileId, ProfileDTO profileDTO) {
         Profile existing = profileRepository.findById(profileId)
                 .orElseThrow(() -> new GenericException("Profile not found with id: " + profileId, HttpStatus.NOT_FOUND));
@@ -85,6 +89,7 @@ public class ProfileService {
      * @throws GenericException if no profile exists with the specified id (HTTP 404)
      */
     @Transactional
+    @CacheEvict(value = CacheNames.PROFILE_BY_ID, key = "#profileId")
     public boolean deleteProfile(Long profileId) {
         if (profileRepository.existsById(profileId)) {
             profileRepository.deleteById(profileId);
