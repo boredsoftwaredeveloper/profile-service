@@ -3,6 +3,7 @@ package dev.bored.profile.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -12,6 +13,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
@@ -61,7 +63,9 @@ public class SecurityConfig {
                         // Everything else (POST, PUT, DELETE) requires a valid JWT
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .bearerTokenResolver(forwardedFirstBearerResolver())
+                        .jwt(Customizer.withDefaults()))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();
@@ -82,5 +86,42 @@ public class SecurityConfig {
         return NimbusJwtDecoder.withJwkSetUri(jwksUri)
                 .jwsAlgorithm(SignatureAlgorithm.ES256)
                 .build();
+    }
+
+    /**
+     * Resolves the bearer token for Spring Security.
+     * <p>
+     * When routed through the API Gateway on Cloud Run, the {@code Authorization}
+     * header carries the Google-signed OIDC ID token used by Cloud Run for
+     * service-to-service ingress auth — that token is meant for Cloud Run, not
+     * for us. The gateway stashes the caller's original Supabase JWT in
+     * {@code X-Forwarded-Authorization}; we read from that header first so
+     * Spring Security never sees the Google ID token. We fall back to the
+     * standard {@code Authorization} header for local development and any
+     * client that reaches the service without going through the gateway.
+     * </p>
+     *
+     * @return a {@link BearerTokenResolver} that prefers {@code X-Forwarded-Authorization}
+     */
+    @Bean
+    public BearerTokenResolver forwardedFirstBearerResolver() {
+        return request -> {
+            String forwarded = request.getHeader("X-Forwarded-Authorization");
+            if (forwarded != null) {
+                return extractBearer(forwarded);
+            }
+            return extractBearer(request.getHeader(HttpHeaders.AUTHORIZATION));
+        };
+    }
+
+    private static String extractBearer(String headerValue) {
+        if (headerValue == null || headerValue.isBlank()) {
+            return null;
+        }
+        if (!headerValue.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            return null;
+        }
+        String token = headerValue.substring(7).trim();
+        return token.isEmpty() ? null : token;
     }
 }
