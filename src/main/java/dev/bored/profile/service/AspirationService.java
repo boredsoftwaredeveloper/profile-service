@@ -6,6 +6,9 @@ import dev.bored.common.exception.GenericException;
 import dev.bored.profile.mapper.AspirationMapper;
 import dev.bored.profile.repository.AspirationRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +40,7 @@ public class AspirationService {
      * @return a list of {@link AspirationDTO} instances for the specified profile
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheNames.ASPIRATIONS_BY_PROFILE, key = "#profileId")
     public List<AspirationDTO> getAspirationsByProfileId(Long profileId) {
         return aspirationMapper.toDTOList(
                 aspirationRepository.findByProfile_ProfileIdOrderBySortOrderAsc(profileId));
@@ -50,6 +54,7 @@ public class AspirationService {
      * @throws GenericException if no aspiration exists with the specified id (HTTP 404)
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheNames.ASPIRATION_BY_ID, key = "#aspirationId")
     public AspirationDTO getAspirationById(Long aspirationId) {
         Aspiration aspiration = aspirationRepository.findById(aspirationId)
                 .orElseThrow(() -> new GenericException("Aspiration not found with id: " + aspirationId, HttpStatus.NOT_FOUND));
@@ -63,6 +68,7 @@ public class AspirationService {
      * @return the newly created {@link AspirationDTO} with its persisted state
      */
     @Transactional
+    @CacheEvict(value = CacheNames.ASPIRATIONS_BY_PROFILE, allEntries = true)
     public AspirationDTO addAspiration(AspirationDTO dto) {
         Aspiration entity = aspirationMapper.toEntity(dto);
         return aspirationMapper.toDTO(aspirationRepository.save(entity));
@@ -77,6 +83,10 @@ public class AspirationService {
      * @throws GenericException if no aspiration exists with the specified id (HTTP 404)
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheNames.ASPIRATION_BY_ID, key = "#aspirationId"),
+            @CacheEvict(value = CacheNames.ASPIRATIONS_BY_PROFILE, allEntries = true)
+    })
     public AspirationDTO updateAspiration(Long aspirationId, AspirationDTO dto) {
         Aspiration existing = aspirationRepository.findById(aspirationId)
                 .orElseThrow(() -> new GenericException("Aspiration not found with id: " + aspirationId, HttpStatus.NOT_FOUND));
@@ -102,6 +112,10 @@ public class AspirationService {
      * @throws GenericException if no aspiration exists with the specified id (HTTP 404)
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheNames.ASPIRATION_BY_ID, key = "#aspirationId"),
+            @CacheEvict(value = CacheNames.ASPIRATIONS_BY_PROFILE, allEntries = true)
+    })
     public boolean deleteAspiration(Long aspirationId) {
         if (aspirationRepository.existsById(aspirationId)) {
             aspirationRepository.deleteById(aspirationId);
